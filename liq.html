@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add Liquidity (TronWeb)</title>
+  <script src="https://cdn.jsdelivr.net/npm/tronweb@4.4.0/dist/TronWeb.js"></script>
+</head>
+<body>
+  <h2>Add Liquidity to DEX (TronWeb)</h2>
+
+  <label>Token A (USDT):</label><br>
+  <input id="tokenA" value="TRP5ekqq98guZB8tnk37cAnWYuX6m5Qy1m" size="50"><br><br>
+
+  <label>Token B (WTRX):</label><br>
+  <input id="tokenB" value="T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb" size="50"><br><br>
+
+  <label>Amount A (USDT, 6 decimals):</label><br>
+  <input id="amountA" value="50000000"><br><br>
+
+  <label>Amount B (TRX, 6 decimals):</label><br>
+  <input id="amountB" value="217000000"><br><br>
+
+  <label>Recipient Address:</label><br>
+  <input id="recipient" placeholder="Leave empty to use your TronLink address"><br><br>
+
+  <button onclick="addLiquidity()">Send Add Liquidity TX</button>
+
+  <p id="status"></p>
+
+  <script>
+    const routerAddress = "TPn9WHtGzNYGLCfKtDbMT9U8WywM4H9tDj";
+    const abi = [
+      {
+        "inputs": [
+          { "internalType": "address", "name": "tokenA", "type": "address" },
+          { "internalType": "address", "name": "tokenB", "type": "address" },
+          { "internalType": "uint256", "name": "amountADesired", "type": "uint256" },
+          { "internalType": "uint256", "name": "amountBDesired", "type": "uint256" },
+          { "internalType": "uint256", "name": "amountAMin", "type": "uint256" },
+          { "internalType": "uint256", "name": "amountBMin", "type": "uint256" },
+          { "internalType": "address", "name": "to", "type": "address" },
+          { "internalType": "uint256", "name": "deadline", "type": "uint256" }
+        ],
+        "name": "addLiquidity",
+        "outputs": [
+          { "internalType": "uint256", "name": "amountA", "type": "uint256" },
+          { "internalType": "uint256", "name": "amountB", "type": "uint256" },
+          { "internalType": "uint256", "name": "liquidity", "type": "uint256" }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      }
+    ];
+
+    async function addLiquidity() {
+      const status = document.getElementById("status");
+      if (!window.tronWeb || !tronWeb.defaultAddress.base58) {
+        status.innerText = "Please log into TronLink first (open it manually if needed)";
+        return;
+      }
+
+      const tokenA = document.getElementById("tokenA").value;
+      const tokenB = document.getElementById("tokenB").value;
+      const amountA = document.getElementById("amountA").value;
+      const amountB = document.getElementById("amountB").value;
+      const to = document.getElementById("recipient").value || tronWeb.defaultAddress.base58;
+      const deadline = Math.floor(Date.now() / 1000) + 600;
+
+      const contract = await tronWeb.contract(abi, routerAddress);
+
+      try {
+        const tx = await contract.addLiquidity(
+          tokenA,
+          tokenB,
+          amountA,
+          amountB,
+          0,
+          0,
+          to,
+          deadline
+        ).send();
+
+        status.innerText = `Transaction sent: ${tx}`;
+      } catch (e) {
+        status.innerText = `Error: ${e.message}`;
+      }
+    }
+  </script>
+</body>
+</html>
