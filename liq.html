@@ -7,6 +7,11 @@
 <body>
   <h2>Add Liquidity to DEX (TronWeb)</h2>
 
+  <!-- Кнопка подключения -->
+  <button onclick="connectWallet()">🔌 Connect TronLink</button>
+  <p id="walletStatus">Wallet not connected</p>
+  <hr>
+
   <label>Token A (USDT):</label><br>
   <input id="tokenA" value="TRP5ekqq98guZB8tnk37cAnWYuX6m5Qy1m" size="50"><br><br>
 
@@ -22,12 +27,12 @@
   <label>Recipient Address:</label><br>
   <input id="recipient" placeholder="Leave empty to use your TronLink address"><br><br>
 
-  <button onclick="addLiquidity()">Send Add Liquidity TX</button>
+  <button onclick="addLiquidity()">🚀 Send Add Liquidity TX</button>
 
   <p id="status"></p>
 
   <script>
-    const routerAddress = "TPn9WHtGzNYGLCfKtDbMT9U8WywM4H9tDj"; // SunSwap V2 Router
+    const routerAddress = "TPn9WHtGzNYGLCfKtDbMT9U8WywM4H9tDj";
     const abi = [
       {
         "inputs": [
@@ -51,23 +56,38 @@
       }
     ];
 
-    async function addLiquidity() {
-      const status = document.getElementById("status");
-      if (!window.tronWeb || !tronWeb.defaultAddress.base58) {
-        status.innerText = "Please log into TronLink first (open it manually if needed)";
+    async function connectWallet() {
+      const status = document.getElementById("walletStatus");
+      if (!window.tronWeb) {
+        status.innerText = "❌ TronLink is not installed";
         return;
       }
 
-      const tokenA = document.getElementById("tokenA").value.trim();
-      const tokenB = document.getElementById("tokenB").value.trim();
-      const amountA = document.getElementById("amountA").value.trim();
-      const amountB = document.getElementById("amountB").value.trim();
-      const to = document.getElementById("recipient").value.trim() || tronWeb.defaultAddress.base58;
+      try {
+        await tronWeb.request({ method: 'tron_requestAccounts' }); // новая версия TronLink
+        status.innerText = "✅ Wallet connected: " + tronWeb.defaultAddress.base58;
+      } catch (e) {
+        status.innerText = "❌ Connection failed: " + e.message;
+      }
+    }
+
+    async function addLiquidity() {
+      const status = document.getElementById("status");
+      if (!tronWeb || !tronWeb.defaultAddress.base58) {
+        status.innerText = "❌ Please connect TronLink first";
+        return;
+      }
+
+      const tokenA = document.getElementById("tokenA").value;
+      const tokenB = document.getElementById("tokenB").value;
+      const amountA = document.getElementById("amountA").value;
+      const amountB = document.getElementById("amountB").value;
+      const to = document.getElementById("recipient").value || tronWeb.defaultAddress.base58;
       const deadline = Math.floor(Date.now() / 1000) + 600;
 
-      try {
-        const contract = await tronWeb.contract(abi, routerAddress);
+      const contract = await tronWeb.contract(abi, routerAddress);
 
+      try {
         const tx = await contract.addLiquidity(
           tokenA,
           tokenB,
@@ -77,12 +97,11 @@
           0,
           to,
           deadline
-        ).send({ feeLimit: 100000000 });
+        ).send();
 
-        status.innerHTML = `Transaction sent: <a href='https://tronscan.org/#/transaction/${tx}' target='_blank'>${tx}</a>`;
+        status.innerHTML = `✅ Transaction sent: <a href="https://tronscan.org/#/transaction/${tx}" target="_blank">${tx}</a>`;
       } catch (e) {
-        console.error(e);
-        status.innerText = `Error: ${e.message}`;
+        status.innerText = "❌ Error: " + e.message;
       }
     }
   </script>
