@@ -27,7 +27,7 @@
   <p id="status"></p>
 
   <script>
-    const routerAddress = "TPn9WHtGzNYGLCfKtDbMT9U8WywM4H9tDj";
+    const routerAddress = "TPn9WHtGzNYGLCfKtDbMT9U8WywM4H9tDj"; // SunSwap V2 Router
     const abi = [
       {
         "inputs": [
@@ -58,16 +58,16 @@
         return;
       }
 
-      const tokenA = document.getElementById("tokenA").value;
-      const tokenB = document.getElementById("tokenB").value;
-      const amountA = document.getElementById("amountA").value;
-      const amountB = document.getElementById("amountB").value;
-      const to = document.getElementById("recipient").value || tronWeb.defaultAddress.base58;
+      const tokenA = document.getElementById("tokenA").value.trim();
+      const tokenB = document.getElementById("tokenB").value.trim();
+      const amountA = document.getElementById("amountA").value.trim();
+      const amountB = document.getElementById("amountB").value.trim();
+      const to = document.getElementById("recipient").value.trim() || tronWeb.defaultAddress.base58;
       const deadline = Math.floor(Date.now() / 1000) + 600;
 
-      const contract = await tronWeb.contract(abi, routerAddress);
-
       try {
+        const contract = await tronWeb.contract(abi, routerAddress);
+
         const tx = await contract.addLiquidity(
           tokenA,
           tokenB,
@@ -77,10 +77,11 @@
           0,
           to,
           deadline
-        ).send();
+        ).send({ feeLimit: 100000000 });
 
-        status.innerText = `Transaction sent: ${tx}`;
+        status.innerHTML = `Transaction sent: <a href='https://tronscan.org/#/transaction/${tx}' target='_blank'>${tx}</a>`;
       } catch (e) {
+        console.error(e);
         status.innerText = `Error: ${e.message}`;
       }
     }
